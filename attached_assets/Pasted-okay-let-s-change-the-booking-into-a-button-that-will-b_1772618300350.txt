@@ -1,0 +1,63 @@
+okay let's change the booking into a button that will be click to direct to the choosing layout style in, this is where the user will choose in our 2 layouts with 2 types (border and non border) styles and they will take the shots, here are the rules, and sequence of the system. still apply the current design and web theme and personality.
+
+here are the layouts.
+
+and then Style 1: The 4-Up Grid (2x2)
+This is a premium, full-sized 4x6 print that takes the most effort from the user, so it commands a slightly higher price and requires a bit more time.
+
+Suggested Price: ₱100 per print
+
+Shots Allowed: 8 total takes. The system requires 4 photos for the layout, meaning the user gets 2 "mulligans" (retakes) to discard photos where someone blinked.
+
+Time Limit (Shooting): 5mins total.
+
+Time Limit (Editing): 3 minutes. Because there are four distinct photos and a footer, users usually want a little extra time to drag in stickers or add text.
+
+Style 2: The Classic Photo Strip (1x3)
+This is the traditional crowd favorite. The printer usually cuts the 4x6 sheet in half, so the user actually walks away with two identical strips for this price.
+
+Suggested Price: ₱50 per print session (yields 2 strips)
+
+Shots Allowed: 6 total takes. The layout needs 3 photos, giving them 2 optional retakes.
+
+Time Limit (Shooting): 3mins seconds total.
+
+Time Limit (Editing): 23 minutes (90 seconds). The strips have less negative space for digital stickers, so they shouldn't need as much time to decorate.
+
+Gemini said
+Here is a visual guide on how the photo booth flow will go, from start to finish.
+
+Step 1: Choose Layout
+The user starts by selecting their desired photo layout from a simple, clear menu.
+
+, AI generated
+
+Step 2: Choose Variety
+Once a layout is chosen (e.g., the 4-Up Grid), the user can select a style variation, such as borderless or with borders.
+
+, AI generated
+
+Step 3: Take Picture
+After the layout is confirmed, a live camera feed appears with a countdown to get the user ready for their shots.
+
+, AI generated
+
+Step 4: Select Picture
+The photos are taken, and a gallery of thumbnails is displayed for the user to pick their favorite shots to fill the layout.
+
+, AI generated
+
+Step 5: Edit Picture
+After the photos are selected and the layout is filled, the user can add a personal touch with stickers, text, or filters on the editing screen.
+
+, AI generated
+
+Step 6: Print
+Once the final photo is approved by the user, the system sends it to a high-quality printer, and the physical print is ejected.
+
+, AI generated
+
+Step 7: Receive & Pay
+Finally, the user collects their printed photo from the printer tray and completes the payment at the counter.
+
+, AI generated
