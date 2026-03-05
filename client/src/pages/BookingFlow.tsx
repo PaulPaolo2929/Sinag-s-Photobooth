@@ -397,14 +397,14 @@ export default function BookingFlow() {
 
         {currentStep === "shoot" && (
           <div className="fixed inset-0 z-[100] bg-black flex animate-in fade-in duration-700 overflow-hidden">
-            <div className="w-24 md:w-40 bg-zinc-950 border-r border-white/5 p-4 flex flex-col gap-3 overflow-y-auto animate-in slide-in-from-left duration-1000">
+            <div className="w-32 md:w-56 bg-zinc-950 border-r border-white/5 p-4 flex flex-col gap-3 overflow-y-auto animate-in slide-in-from-left duration-1000">
               <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] text-center mb-2">
                 Captured
               </div>
               {Array.from({ length: totalShots }).map((_, i) => (
                 <div
                   key={i}
-                  className={`aspect-[3/4] rounded-xl border-2 transition-all duration-500 ${photos[i] ? "border-primary shadow-[0_0_15px_rgba(255,107,74,0.3)] scale-95" : "bg-white/5 border-white/5"}`}
+                  className={`aspect-video rounded-xl border-2 transition-all duration-500 ${photos[i] ? "border-primary shadow-[0_0_15px_rgba(255,107,74,0.3)] scale-95" : "bg-white/5 border-white/5"}`}
                   style={
                     photos[i]
                       ? {
@@ -516,7 +516,7 @@ export default function BookingFlow() {
                           )
                         : setSelectedPhotos((prev) => [...prev, i.toString()])
                     }
-                    className={`relative aspect-[3/4] rounded-3xl overflow-hidden transition-all duration-500 ${isSelected ? "ring-8 ring-primary scale-95 shadow-2xl z-10" : isDisabled ? "opacity-30 grayscale" : "hover:scale-105 hover:shadow-xl"}`}
+                    className={`relative aspect-video rounded-3xl overflow-hidden transition-all duration-500 ${isSelected ? "ring-8 ring-primary scale-95 shadow-2xl z-10" : isDisabled ? "opacity-30 grayscale" : "hover:scale-105 hover:shadow-xl"}`}
                     style={{
                       backgroundImage: `url(${photo})`,
                       backgroundSize: "cover",
