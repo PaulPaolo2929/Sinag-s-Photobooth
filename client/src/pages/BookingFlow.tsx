@@ -7,16 +7,134 @@ import {
   Printer,
   CheckCircle,
   ChevronRight,
-  RefreshCcw,
+  ChevronLeft,
+  Palette,
+  ArrowRight,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Progress } from "@/components/ui/progress";
+import { HexColorPicker } from "react-colorful";
 
 const API_URL = "http://localhost:8000/api";
 
 type Step = "layout" | "variety" | "shoot" | "select" | "edit" | "print";
 type LayoutType = "strip" | "grid" | null;
 type VarietyType = "border" | "borderless" | null;
+type DecorateStep = "filter" | "frame";
+
+// Filter presets
+const FILTER_PRESETS = [
+  { id: "normal", name: "Normal", filter: "none" },
+  {
+    id: "clarendon",
+    name: "Clarendon",
+    filter: "contrast(1.2) saturate(1.35)",
+  },
+  {
+    id: "gingham",
+    name: "Gingham",
+    filter: "brightness(1.05) hue-rotate(-10deg)",
+  },
+  {
+    id: "moon",
+    name: "Moon",
+    filter: "grayscale(1) contrast(1.1) brightness(1.1)",
+  },
+  {
+    id: "lark",
+    name: "Lark",
+    filter: "contrast(0.9) brightness(1.1) saturate(1.2)",
+  },
+  {
+    id: "reyes",
+    name: "Reyes",
+    filter: "sepia(0.22) brightness(1.1) contrast(0.85) saturate(0.75)",
+  },
+  {
+    id: "juno",
+    name: "Juno",
+    filter: "contrast(1.15) saturate(1.8) sepia(0.15)",
+  },
+  {
+    id: "slumber",
+    name: "Slumber",
+    filter: "saturate(0.66) brightness(1.05) sepia(0.15)",
+  },
+  {
+    id: "crema",
+    name: "Crema",
+    filter: "sepia(0.15) contrast(1.1) brightness(0.9) saturate(0.9)",
+  },
+  {
+    id: "ludwig",
+    name: "Ludwig",
+    filter: "contrast(1.05) saturate(0.9) brightness(1.05)",
+  },
+  {
+    id: "aden",
+    name: "Aden",
+    filter: "hue-rotate(-20deg) contrast(0.9) saturate(0.85) brightness(1.2)",
+  },
+  {
+    id: "perpetua",
+    name: "Perpetua",
+    filter: "contrast(1.1) brightness(1.05) saturate(1.1)",
+  },
+  {
+    id: "sunrise",
+    name: "Sunrise",
+    filter: "sepia(0.3) contrast(1.2) brightness(1.1) saturate(1.3)",
+  },
+  {
+    id: "sunset",
+    name: "Sunset",
+    filter: "sepia(0.4) contrast(1.2) saturate(1.3) brightness(0.9)",
+  },
+  {
+    id: "cinematic",
+    name: "Cinematic",
+    filter: "contrast(1.2) saturate(1.1) brightness(0.9)",
+  },
+  {
+    id: "warm",
+    name: "Warm",
+    filter: "sepia(0.3) saturate(1.5) brightness(1.05)",
+  },
+  {
+    id: "cool",
+    name: "Cool",
+    filter: "hue-rotate(15deg) saturate(1.2) brightness(1.05)",
+  },
+  {
+    id: "dramatic",
+    name: "Dramatic",
+    filter: "contrast(1.4) brightness(0.9) saturate(1.1)",
+  },
+  {
+    id: "fade",
+    name: "Fade",
+    filter: "contrast(0.9) brightness(1.1) saturate(0.8)",
+  },
+  {
+    id: "moody",
+    name: "Moody",
+    filter: "contrast(1.3) brightness(0.85) saturate(0.9)",
+  },
+  { id: "vibrant", name: "Vibrant", filter: "saturate(1.8) contrast(1.1)" },
+  {
+    id: "pastel",
+    name: "Pastel",
+    filter: "contrast(0.9) brightness(1.1) saturate(0.8)",
+  },
+  { id: "noir", name: "Noir", filter: "grayscale(1) contrast(1.2)" },
+  {
+    id: "vintage",
+    name: "Vintage",
+    filter: "sepia(0.5) contrast(0.9) brightness(0.95)",
+  },
+] as const;
+
+type FilterType = (typeof FILTER_PRESETS)[number]["id"];
 
 export default function BookingFlow() {
   const [currentStep, setCurrentStep] = useState<Step>("layout");
@@ -26,6 +144,14 @@ export default function BookingFlow() {
   const [photoIds, setPhotoIds] = useState<number[]>([]);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [countdown, setCountdown] = useState<number | null>(null);
+
+  // Filter and Frame state
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>("normal");
+  const [selectedFrameColor, setSelectedFrameColor] =
+    useState<string>("#18181b");
+  const [showCustomColorPicker, setShowCustomColorPicker] = useState(false);
+  const [customColor, setCustomColor] = useState("#ff6b4a");
+  const [decorateStep, setDecorateStep] = useState<DecorateStep>("filter");
 
   // Webcam refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -257,7 +383,7 @@ export default function BookingFlow() {
 
   return (
     <div
-      className="min-h-screen pt-12 pb-12 px-4 max-w-7xl mx-auto flex flex-col overflow-hidden"
+      className="min-h-screen pt-4 pb-12 px-4 max-w-7xl mx-auto flex flex-col overflow-hidden"
       data-testid="page-booking-flow"
     >
       <div className="mb-8 glass-card p-4 rounded-3xl sticky top-4 z-40 max-w-4xl mx-auto w-full animate-in fade-in slide-in-from-top-4 duration-1000">
@@ -293,7 +419,7 @@ export default function BookingFlow() {
       <div className="flex-1 flex flex-col relative">
         {currentStep === "layout" && (
           <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-4xl mx-auto w-full stagger-in">
-            <h2 className="text-4xl md:text-6xl font-black mb-4 text-center tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-black mb-4 text-center tracking-tight">
               Step 1: Choose Layout
             </h2>
             <p className="text-center text-foreground/60 mb-12 text-lg">
@@ -350,7 +476,7 @@ export default function BookingFlow() {
 
         {currentStep === "variety" && (
           <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-4xl mx-auto w-full stagger-in">
-            <h2 className="text-4xl md:text-6xl font-black mb-4 text-center tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-black mb-4 text-center tracking-tight">
               Step 2: Choose Style
             </h2>
             <p className="text-center text-foreground/60 mb-12 text-lg">
@@ -464,9 +590,32 @@ export default function BookingFlow() {
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="absolute inset-0 bg-zinc-900 animate-pulse opacity-40" />
                   {countdown !== null ? (
-                    <div className="text-[20rem] md:text-[35rem] font-black text-white z-10 drop-shadow-[0_0_60px_rgba(0,0,0,1)] animate-in zoom-in spin-in-3 duration-300">
-                      {countdown}
+                     <div className="w-full h-full flex items-center justify-center">
+                  <div className="absolute inset-0 bg-zinc-900 animate-pulse opacity-40" />
+                  {countdown !== null ? (
+                    
+                  <div className="relative flex items-center justify-center z-10">
+                      {/* The expanding sun ripple */}
+                      <div className="absolute w-32 h-32 md:w-56 md:h-56 border-8 border-yellow-400 rounded-full animate-ping opacity-75" />
+                      
+                      {/* The glowing sun text */}
+                      <div className="relative text-[5rem] md:text-[9rem] font-black text-white drop-shadow-[0_0_40px_rgba(250,204,21,1)] animate-in zoom-in spin-in-3 duration-300">
+                        {countdown}
+                      </div>
                     </div>
+                  ) : (
+                    <div className="absolute top-12 right-12 bg-red-600 text-white px-8 py-4 rounded-full font-black animate-pulse flex items-center gap-4 text-2xl shadow-2xl z-20">
+                      <div className="w-5 h-5 bg-white rounded-full" /> LIVE
+                      FEED
+                    </div>
+                  )}
+                  {countdown === null && photos.length > 0 && (
+                    <div
+                      className="absolute inset-0 bg-white z-50 animate-out fade-out duration-700 pointer-events-none"
+                      key={photos.length}
+                    />
+                  )}
+                </div>
                   ) : (
                     <div className="absolute top-12 right-12 bg-red-600 text-white px-8 py-4 rounded-full font-black animate-pulse flex items-center gap-4 text-2xl shadow-2xl z-20">
                       <div className="w-5 h-5 bg-white rounded-full" /> LIVE
@@ -493,7 +642,7 @@ export default function BookingFlow() {
 
         {currentStep === "select" && (
           <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto w-full stagger-in">
-            <h2 className="text-4xl md:text-6xl font-black mb-4 text-center tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-black mb-4 text-center tracking-tight">
               Step 4: Pick Your Best
             </h2>
             <p className="text-center text-foreground/60 mb-12 text-lg">
@@ -549,140 +698,285 @@ export default function BookingFlow() {
         )}
 
         {currentStep === "edit" && (
-          <div className="flex-1 flex flex-col lg:flex-row gap-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 items-start max-w-7xl mx-auto w-full stagger-in">
-            <div className="flex-1 w-full bg-white/40 rounded-[3.5rem] border border-white p-8 md:p-16 flex items-center justify-center min-h-[600px] lg:min-h-[850px] shadow-2xl relative overflow-hidden group">
+          <div className="flex-1 flex flex-col lg:flex-row gap-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 items-start max-w-7xl mx-auto w-full">
+            
+            {/* Photo Preview - Always Visible */}
+            <div className="flex-1 w-full bg-white/40 rounded-[3rem] border border-white p-8 md:p-12 flex items-center justify-center min-h-[500px] lg:min-h-[700px] shadow-2xl relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-secondary)_0%,_transparent_80%)] opacity-20" />
+              
+              {/* Photo Frame */}
               {layout === "strip" ? (
                 <div
-                  className={`bg-white shadow-[0_40px_100px_rgba(0,0,0,0.2)] flex flex-col relative transition-all duration-700 hover:scale-[1.05] hover:rotate-1 ${variety === "borderless" ? "p-0" : "p-4 gap-4"}`}
-                  style={{ width: "240px", height: "720px" }}
+                  className="bg-white shadow-[0_40px_100px_rgba(0,0,0,0.2)] flex flex-col relative transition-all duration-700"
+                  style={{
+                    width: "200px",
+                    height: "600px",
+                    padding: variety === "borderless" ? "0" : "12px",
+                    gap: variety === "borderless" ? "0" : "12px",
+                    backgroundColor: selectedFrameColor,
+                  }}
                 >
                   {selectedPhotos.map((id) => (
                     <div
                       key={id}
-                      className="flex-1 w-full relative overflow-hidden shadow-inner animate-in fade-in slide-in-from-bottom-4 duration-1000"
+                      className="flex-1 w-full relative overflow-hidden shadow-inner"
                       style={{
                         backgroundImage: `url(${photos[parseInt(id)]})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
+                        filter: FILTER_PRESETS.find(f => f.id === selectedFilter)?.filter || 'none',
                       }}
                     />
                   ))}
-                  <div className="h-24 flex flex-col items-center justify-center bg-white border-t border-gray-50">
-                    <span className="text-xs font-black text-gray-300 tracking-[0.5em] animate-pulse">
-                      SINAG
-                    </span>
+                  <div className="h-20 flex items-center justify-center border-t" style={{ 
+                    backgroundColor: selectedFrameColor,
+                    borderColor: selectedFrameColor === '#ffffff' ? '#e5e5e5' : selectedFrameColor 
+                  }}>
+                    <span className="text-xs font-black text-gray-300 tracking-[0.5em]">SINAG</span>
                   </div>
                 </div>
               ) : (
                 <div
-                  className={`bg-white shadow-[0_40px_100px_rgba(0,0,0,0.2)] flex flex-col relative transition-all duration-700 hover:scale-[1.05] hover:-rotate-1 ${variety === "borderless" ? "p-0" : "p-5 gap-5"}`}
-                  style={{ width: "480px", height: "720px" }}
+                  className="bg-white shadow-[0_40px_100px_rgba(0,0,0,0.2)] flex flex-col relative transition-all duration-700"
+                  style={{
+                    width: "400px",
+                    height: "600px",
+                    padding: variety === "borderless" ? "0" : "16px",
+                    gap: variety === "borderless" ? "0" : "16px",
+                    backgroundColor: selectedFrameColor,
+                  }}
                 >
-                  <div
-                    className={`grid grid-cols-2 grid-rows-2 flex-1 ${variety === "borderless" ? "gap-0" : "gap-5"}`}
-                  >
+                  <div className={`grid grid-cols-2 grid-rows-2 flex-1`} style={{ gap: variety === "borderless" ? "0" : "16px" }}>
                     {selectedPhotos.map((id) => (
                       <div
                         key={id}
-                        className="w-full h-full relative overflow-hidden shadow-inner animate-in fade-in zoom-in duration-1000"
+                        className="w-full h-full relative overflow-hidden shadow-inner"
                         style={{
                           backgroundImage: `url(${photos[parseInt(id)]})`,
                           backgroundSize: "cover",
                           backgroundPosition: "center",
+                          filter: FILTER_PRESETS.find(f => f.id === selectedFilter)?.filter || 'none',
                         }}
                       />
                     ))}
                   </div>
-                  <div className="h-32 flex flex-col items-center justify-center bg-white border-t border-gray-100">
-                    <span className="text-2xl font-black text-gray-300 tracking-[0.6em] animate-pulse">
-                      SINAG PHOTOBOOTH
-                    </span>
+                  <div className="h-28 flex items-center justify-center border-t" style={{ 
+                    backgroundColor: selectedFrameColor,
+                    borderColor: selectedFrameColor === '#ffffff' ? '#e5e5e5' : selectedFrameColor 
+                  }}>
+                    <span className="text-xl font-black text-gray-300 tracking-[0.6em]">SINAG PHOTOBOOTH</span>
                   </div>
                 </div>
               )}
             </div>
-            <div className="w-full lg:w-[450px] flex flex-col gap-10 sticky top-32">
-              <div className="space-y-3 stagger-in">
-                <h2 className="text-5xl font-black tracking-tight">
-                  Personalize
-                </h2>
-                <p className="text-xl text-foreground/60 font-medium leading-relaxed">
-                  Add your signature touch to the moment.
-                </p>
+
+            {/* Controls Panel - Sequential Steps */}
+            <div className="w-full lg:w-[420px] flex flex-col gap-6">
+              
+              {/* Header */}
+              <div className="text-center">
+                <h2 className="text-4xl font-black tracking-tight">Personalize</h2>
+                <p className="text-foreground/60 mt-2">Add your signature touch</p>
               </div>
-              <div className="space-y-8 stagger-in">
-                <div className="glass-card p-8 rounded-[2.5rem] border-white shadow-xl hover:shadow-2xl transition-all duration-500">
-                  <h3 className="text-xs font-black uppercase tracking-[0.3em] mb-6 flex items-center gap-3 text-primary">
-                    <Wand2 size={18} /> Artistic Filters
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    {[
-                      "Normal",
-                      "Sunshine",
-                      "Vintage",
-                      "Noir",
-                      "Vibrant",
-                      "Dreamy",
-                    ].map((f) => (
-                      <button
-                        key={f}
-                        className="flex flex-col items-center gap-3 group transition-all duration-300 hover:-translate-y-1"
-                      >
-                        <div
-                          className={`w-full aspect-square rounded-2xl bg-gray-100 border-2 border-transparent group-hover:border-primary transition-all relative overflow-hidden shadow-sm`}
-                        >
-                          <div
-                            className={`absolute inset-0 ${f === "Sunshine" ? "bg-orange-200/30" : f === "Vintage" ? "bg-amber-900/20 sepia" : f === "Noir" ? "grayscale" : ""}`}
-                          />
-                          <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300" />
-                        </div>
-                        <span className="text-[11px] font-black uppercase tracking-widest text-foreground/50 group-hover:text-primary transition-colors">
-                          {f}
-                        </span>
-                      </button>
-                    ))}
+
+              {/* Step Indicator */}
+              <div className="flex items-center justify-center gap-4">
+                <div className={`flex items-center gap-2 ${decorateStep === "filter" ? "text-primary" : "text-green-500"}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${decorateStep === "filter" ? "bg-primary text-white" : "bg-green-500 text-white"}`}>
+                    {decorateStep === "filter" ? "1" : "✓"}
                   </div>
+                  <span className="font-bold text-sm">Filter</span>
                 </div>
-                <div className="glass-card p-8 rounded-[2.5rem] border-white shadow-xl hover:shadow-2xl transition-all duration-500">
-                  <h3 className="text-xs font-black uppercase tracking-[0.3em] mb-6 text-secondary">
-                    Frame Style
-                  </h3>
-                  <div className="flex flex-wrap gap-4">
-                    {[
-                      { n: "Pure", c: "bg-white border" },
-                      { n: "Night", c: "bg-zinc-900" },
-                      { n: "Coral", c: "bg-primary" },
-                      { n: "Sun", c: "bg-secondary" },
-                      { n: "Sky", c: "bg-accent" },
-                      { n: "Blush", c: "bg-rose-200" },
-                    ].map((color) => (
-                      <button
-                        key={color.n}
-                        className="group flex flex-col items-center gap-2 hover:scale-110 transition-all duration-300"
-                      >
+                <div className="w-8 h-0.5 bg-gray-200" />
+                <div className={`flex items-center gap-2 ${decorateStep === "frame" ? "text-primary" : "text-gray-300"}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${decorateStep === "frame" ? "bg-primary text-white" : "bg-gray-200 text-gray-400"}`}>
+                    2
+                  </div>
+                  <span className="font-bold text-sm">Frame</span>
+                </div>
+              </div>
+
+              {/* Glass Card Container */}
+              <div className="glass-card p-6 rounded-[2.5rem] border-white shadow-xl">
+                
+                {/* STEP 1: FILTER SELECTION */}
+                {decorateStep === "filter" && (
+                  <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                    <h3 className="text-sm font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 text-primary">
+                      <Wand2 size={16} /> Choose Filter
+                    </h3>
+                    
+                    {/* Large Live Preview */}
+                    <div className="relative aspect-[16/9] rounded-2xl overflow-hidden shadow-lg mb-4 border-2 border-primary/20">
+                      {selectedPhotos.length > 0 ? (
                         <div
-                          className={`w-12 h-12 rounded-full ${color.c} ring-4 ring-offset-4 ring-transparent hover:ring-primary/30 transition-all shadow-md`}
+                          className="w-full h-full"
+                          style={{
+                            backgroundImage: `url(${photos[parseInt(selectedPhotos[0])]})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            filter: FILTER_PRESETS.find(f => f.id === selectedFilter)?.filter || 'none',
+                          }}
                         />
-                        <span className="text-[10px] font-bold text-foreground/40">
-                          {color.n}
-                        </span>
-                      </button>
-                    ))}
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-gray-400">No photo</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                        <p className="text-white font-black text-center">
+                          {FILTER_PRESETS.find(f => f.id === selectedFilter)?.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Filter Grid */}
+                    <div className="grid grid-cols-4 gap-2 max-h-[180px] overflow-y-auto pr-1">
+                      {FILTER_PRESETS.map((filter) => {
+                        const previewPhoto = selectedPhotos.length > 0 ? photos[parseInt(selectedPhotos[0])] : null;
+                        return (
+                          <button
+                            key={filter.id}
+                            onClick={() => setSelectedFilter(filter.id)}
+                            className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                              selectedFilter === filter.id 
+                                ? "border-primary ring-2 ring-primary/30 scale-105" 
+                                : "border-transparent hover:border-primary/50"
+                            }`}
+                          >
+                            {previewPhoto ? (
+                              <div
+                                className="w-full h-full"
+                                style={{
+                                  backgroundImage: `url(${previewPhoto})`,
+                                  backgroundSize: "cover",
+                                  backgroundPosition: "center",
+                                  filter: filter.filter,
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* STEP 2: FRAME COLOR SELECTION */}
+                {decorateStep === "frame" && (
+                  <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                    <h3 className="text-sm font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 text-secondary">
+                      <Palette size={16} /> Choose Frame Color
+                    </h3>
+
+                    {/* Color Options */}
+                    <div className="grid grid-cols-4 gap-3 mb-4">
+                      {[
+                        { name: "Pure", color: "#ffffff" },
+                        { name: "Night", color: "#18181b" },
+                        { name: "Coral", color: "#ff6b4a" },
+                        { name: "Sun", color: "#ffd166" },
+                        { name: "Sky", color: "#72ddf7" },
+                        { name: "Blush", color: "#fda4af" },
+                        { name: "Lavender", color: "#a78bfa" },
+                        { name: "Mint", color: "#6ee7b7" },
+                      ].map((c) => (
+                        <button
+                          key={c.name}
+                          onClick={() => setSelectedFrameColor(c.color)}
+                          className={`aspect-square rounded-xl border-3 transition-all hover:scale-105 ${
+                            selectedFrameColor === c.color
+                              ? "ring-4 ring-primary ring-offset-2"
+                              : "ring-1 ring-gray-200"
+                          }`}
+                          style={{ 
+                            backgroundColor: c.color,
+                            borderColor: c.color === '#ffffff' ? '#ddd' : c.color
+                          }}
+                          title={c.name}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Custom Color Button */}
+                    <button
+                      onClick={() => setShowCustomColorPicker(!showCustomColorPicker)}
+                      className={`w-full py-3 rounded-xl border-2 border-dashed transition-all flex items-center justify-center gap-2 ${
+                        showCustomColorPicker 
+                          ? "border-primary bg-primary/5 text-primary" 
+                          : "border-gray-300 text-gray-500 hover:border-primary hover:text-primary"
+                      }`}
+                    >
+                      <Palette size={18} />
+                      <span className="font-bold text-sm">Custom Color</span>
+                    </button>
+
+                    {/* Custom Color Picker Modal */}
+                    {showCustomColorPicker && (
+                      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40" onClick={() => setShowCustomColorPicker(false)}>
+                        <div className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm mx-4 w-full" onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="font-black text-lg">Pick a Color</h4>
+                            <button onClick={() => setShowCustomColorPicker(false)} className="p-2 hover:bg-gray-100 rounded-full">✕</button>
+                          </div>
+                          <HexColorPicker color={customColor} onChange={setCustomColor} style={{ width: '100%', height: '160px' }} />
+                          <div className="flex items-center gap-3 mt-4">
+                            <div className="w-10 h-10 rounded-lg shadow" style={{ backgroundColor: customColor }} />
+                            <input
+                              type="text"
+                              value={customColor.toUpperCase()}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (/^#[0-9A-Fa-f]{0,7}$/.test(val)) setCustomColor(val);
+                              }}
+                              className="flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 font-mono text-sm font-bold uppercase focus:border-primary focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex gap-2 mt-4 flex-wrap">
+                            {["#ff6b4a", "#ffd166", "#72ddf7", "#a855f7", "#f43f5e", "#22c55e", "#3b82f6", "#f59e0b"].map((c) => (
+                              <button key={c} onClick={() => setCustomColor(c)} className="w-8 h-8 rounded-lg hover:scale-110 transition-transform" style={{ backgroundColor: c }} />
+                            ))}
+                          </div>
+                          <div className="flex gap-3 mt-6">
+                            <Button variant="outline" onClick={() => setShowCustomColorPicker(false)} className="flex-1 rounded-xl h-12 font-bold">Cancel</Button>
+                            <Button onClick={() => { setSelectedFrameColor(customColor); setShowCustomColorPicker(false); }} className="flex-1 rounded-xl h-12 font-bold">Apply</Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="pt-6 stagger-in">
+
+              {/* Navigation Buttons */}
+              <div className="flex gap-3">
+                {decorateStep === "frame" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setDecorateStep("filter")}
+                    className="flex-1 rounded-2xl h-14 font-bold flex items-center justify-center gap-2"
+                  >
+                    <ChevronLeft size={20} /> Back
+                  </Button>
+                )}
                 <Button
-                  size="lg"
-                  onClick={handleNext}
-                  className="w-full rounded-3xl bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-gradient text-white font-black h-20 text-2xl shadow-2xl shadow-primary/30 hover:scale-110 transition-all active:scale-95"
+                  onClick={() => {
+                    if (decorateStep === "filter") {
+                      setDecorateStep("frame");
+                    } else {
+                      handleNext();
+                    }
+                  }}
+                  className={`flex-1 rounded-2xl h-14 font-bold flex items-center justify-center gap-2 ${decorateStep === "filter" ? "bg-primary" : "bg-gradient-to-r from-primary to-secondary"}`}
                 >
-                  Ready to Print
+                  {decorateStep === "filter" ? (
+                    <>Next: Frame <ArrowRight size={20} /></>
+                  ) : (
+                    <>Ready to Print <CheckCircle size={20} /></>
+                  )}
                 </Button>
-                <p className="text-center text-[11px] font-black text-foreground/30 mt-6 uppercase tracking-[0.4em]">
-                  Final step before physical print
-                </p>
               </div>
             </div>
           </div>
